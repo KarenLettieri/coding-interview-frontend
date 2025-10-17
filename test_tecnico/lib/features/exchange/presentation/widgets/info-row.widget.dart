@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class InfoRow extends StatelessWidget {
-  const InfoRow({required this.label, required this.value, this.labelColor});
+  const InfoRow({super.key, required this.label, required this.value, this.labelColor});
   final String label;
   final String value;
   final Color? labelColor;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class CircleIcon extends StatelessWidget {
-  const CircleIcon({required this.assetKey});
+  const CircleIcon({super.key, required this.assetKey});
   final String assetKey;
 
   String assetPath() {

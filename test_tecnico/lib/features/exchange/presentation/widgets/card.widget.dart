@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class Card extends StatelessWidget {
-  const Card({required this.child});
+  const Card({super.key, required this.child});
   final Widget child;
 
   @override

@@ -2,18 +2,18 @@ import '../../domain/entities/exchange_result.dart';
 
 class ExchangeModel extends ExchangeResult {
   ExchangeModel({
-    required double rate,
-    required double totalReceived,
-    required String estimatedTime,
-  }) : super(rate: rate, totalReceived: totalReceived, estimatedTime: estimatedTime);
+    required super.rate,
+    required super.totalReceived,
+    required super.estimatedTime,
+  });
 
   factory ExchangeModel.fromApi({
     required Map<String, dynamic> raw,
     required int type,
     required double amount,
   }) {
-    
-    final dynamic rateRaw = raw['data']?['byPrice']?['fiatToCryptoExchangeRate'];
+    final dynamic rateRaw =
+        raw['data']?['byPrice']?['fiatToCryptoExchangeRate'];
 
     double rate = 0.0;
     if (rateRaw is num) {
@@ -26,7 +26,6 @@ class ExchangeModel extends ExchangeResult {
 
     double totalReceived = 0.0;
 
-    
     if (rate <= 0) {
       totalReceived = 0.0;
     } else if (type == 1) {
@@ -34,7 +33,6 @@ class ExchangeModel extends ExchangeResult {
     } else {
       totalReceived = amount / rate;
     }
-
 
     const estimatedTime = '≈ 10 Min';
 

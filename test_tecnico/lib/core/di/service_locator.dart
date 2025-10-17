@@ -22,7 +22,7 @@ Future<void> init() async {
 
   // Data source
   sl.registerLazySingleton<ExchangeRemoteDataSource>(
-    () => ExchangeRemoteDataSourceImpl(),
+    () => ExchangeRemoteDataSourceImpl(sl()),
   );
 
   // Repository

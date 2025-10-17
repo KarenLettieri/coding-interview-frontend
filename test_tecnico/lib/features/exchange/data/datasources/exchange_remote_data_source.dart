@@ -1,11 +1,10 @@
-
-import 'dart:convert';
 import 'dart:io';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:test_tecnico/core/network/api_client.dart';
 
 abstract class ExchangeRemoteDataSource {
   Future<Map<String, dynamic>> getRecommendation({
-    required int type,               
+    required int type,
     required String cryptoCurrencyId,
     required String fiatCurrencyId,
     required double amount,
@@ -14,10 +13,9 @@ abstract class ExchangeRemoteDataSource {
 }
 
 class ExchangeRemoteDataSourceImpl implements ExchangeRemoteDataSource {
-  static const _host = '74j6q7lg6a.execute-api.eu-west-1.amazonaws.com';
-  static const _path = '/stage/orderbook/public/recommendations';
+  final ApiClient apiClient;
 
-  ExchangeRemoteDataSourceImpl();
+  ExchangeRemoteDataSourceImpl(this.apiClient);
 
   @override
   Future<Map<String, dynamic>> getRecommendation({
@@ -27,49 +25,37 @@ class ExchangeRemoteDataSourceImpl implements ExchangeRemoteDataSource {
     required double amount,
     required String amountCurrencyId,
   }) async {
-    final uri = Uri.https(_host, _path, {
-      'type': '$type',
-      'cryptoCurrencyId': cryptoCurrencyId,
-      'fiatCurrencyId': fiatCurrencyId,
-      'amount': amount.toString(),
-      'amountCurrencyId': amountCurrencyId,
-    });
+    try {
+      final response = await apiClient.dio.get(
+        '/recommendations',
+        queryParameters: {
+          'type': '$type',
+          'cryptoCurrencyId': cryptoCurrencyId,
+          'fiatCurrencyId': fiatCurrencyId,
+          'amount': amount.toString(),
+          'amountCurrencyId': amountCurrencyId,
+        },
+      );
 
-    print('📡 GET $uri');
-
-    final res = await http
-        .get(uri, headers: {HttpHeaders.acceptHeader: 'application/json'})
-        .timeout(const Duration(seconds: 15));
-
-    print('➡️  STATUS: ${res.statusCode}');
-
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      print('❌ Body (error): ${res.body}');
-      throw HttpException('HTTP ${res.statusCode}: ${res.body}');
-    }
-
-    final body = json.decode(res.body);
-    final data = body['data'];
+      final body = response.data;
+      final data = body['data'];
     final byPrice = data?['byPrice'];
-    final byAmount = data?['byAmount']; 
+    final byAmount = data?['byAmount'];
 
-
-    dynamic ftc = byPrice?['fiatToCryptoExchangeRate'] ??
+    dynamic ftc =
+        byPrice?['fiatToCryptoExchangeRate'] ??
         byAmount?['fiatToCryptoExchangeRate'] ??
         data?['fiatToCryptoExchangeRate'];
 
-    dynamic ctf = byPrice?['cryptoToFiatExchangeRate'] ??
+    dynamic ctf =
+        byPrice?['cryptoToFiatExchangeRate'] ??
         byAmount?['cryptoToFiatExchangeRate'] ??
         data?['cryptoToFiatExchangeRate'];
 
     final ftcNum = _toDoubleSafe(ftc);
     final ctfNum = _toDoubleSafe(ctf);
 
-    print('🧩 Keys: data=${data?.keys} | ftc=$ftcNum | ctf=$ctfNum | byPriceType=${byPrice.runtimeType}');
-
-
     if ((ftcNum == null || ftcNum == 0) && (ctfNum == null || ctfNum == 0)) {
-      print('⚠️  No hay exchangeRate disponible. Body: ${res.body}');
       return {
         'rate': null,
         'receive': null,
@@ -78,39 +64,42 @@ class ExchangeRemoteDataSourceImpl implements ExchangeRemoteDataSource {
       };
     }
 
-    final double rawCtf; 
+    final double rawCtf;
     final double rawFtc;
 
     if (ftcNum != null && ftcNum > 0) {
-      rawCtf = ftcNum;        
-      rawFtc = 1 / ftcNum;    
+      rawCtf = ftcNum;
+      rawFtc = 1 / ftcNum;
     } else {
-     
-      rawCtf = ctfNum!;       
-      rawFtc = 1 / ctfNum!;  
+      rawCtf = ctfNum!;
+      rawFtc = 1 / ctfNum;
     }
-
 
     double rateToShow;
     double receive;
 
     if (type == 0) {
       // CRYPTO → FIAT
-      rateToShow = rawCtf;             
-      receive = amount * rawCtf;       
+      rateToShow = rawCtf;
+      receive = amount * rawCtf;
     } else {
       // FIAT → CRYPTO
-      rateToShow = rawFtc;             
-      receive = amount * rawFtc;       
+      rateToShow = rawFtc;
+      receive = amount * rawFtc;
     }
 
-    return {
-      'rate': rateToShow,
-      'receive': receive,
-      'eta': '≈ 10 Min',
-      'rawFtc': rawFtc,
-      'rawCtf': rawCtf,
-    };
+      return {
+        'rate': rateToShow,
+        'receive': receive,
+        'eta': '≈ 10 Min',
+        'rawFtc': rawFtc,
+        'rawCtf': rawCtf,
+      };
+    } on DioError catch (e) {
+      final status = e.response?.statusCode;
+      final data = e.response?.data;
+      throw HttpException('HTTP ${status ?? 'Error'}: ${data ?? e.message}');
+    }
   }
 
   double? _toDoubleSafe(dynamic v) {

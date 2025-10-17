@@ -17,18 +17,19 @@ Future<void> init() async {
   sl.registerLazySingleton(() => Connectivity());
 
   // -------- Core --------
-  sl.registerLazySingleton(() => ApiClient(sl())); 
+  sl.registerLazySingleton(() => ApiClient(sl()));
   sl.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(sl()));
 
   // -------- Data sources --------
-  
-  sl.registerLazySingleton<ExchangeRemoteDataSource>(() => ExchangeRemoteDataSourceImpl());
+
+  sl.registerLazySingleton<ExchangeRemoteDataSource>(
+    () => ExchangeRemoteDataSourceImpl(sl()),
+  );
 
   // -------- Repositories --------
-  sl.registerLazySingleton<ExchangeRepository>(() => ExchangeRepositoryImpl(
-        remoteDataSource: sl(),
-        networkInfo: sl(),
-      ));
+  sl.registerLazySingleton<ExchangeRepository>(
+    () => ExchangeRepositoryImpl(remoteDataSource: sl(), networkInfo: sl()),
+  );
 
   // -------- Use cases --------
   sl.registerLazySingleton(() => GetExchangeRate(sl()));

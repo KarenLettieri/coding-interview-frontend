@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 class SwapButton extends StatelessWidget {
-  const SwapButton({required this.onTap});
+  const SwapButton({super.key, required this.onTap});
   final VoidCallback onTap;
 
   @override

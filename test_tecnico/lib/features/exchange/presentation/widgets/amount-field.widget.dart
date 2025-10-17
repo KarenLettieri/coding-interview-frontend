@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AmountField extends StatelessWidget {
   const AmountField({
+    super.key,
     required this.controller,
     required this.prefix,
     required this.borderColor,
@@ -9,7 +10,7 @@ class AmountField extends StatelessWidget {
   });
 
   final TextEditingController controller;
-  final String prefix; 
+  final String prefix;
   final Color borderColor;
   final ValueChanged<String>? onChanged;
 
@@ -20,7 +21,6 @@ class AmountField extends StatelessWidget {
       onChanged: onChanged,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       decoration: InputDecoration(
-      
         prefix: Padding(
           padding: const EdgeInsets.only(right: 8),
           child: Text(
@@ -30,7 +30,10 @@ class AmountField extends StatelessWidget {
         ),
         isDense: true,
         hintText: '0.00',
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         enabledBorder: OutlineInputBorder(
           borderSide: BorderSide(color: borderColor, width: 2),
           borderRadius: BorderRadius.circular(16),
